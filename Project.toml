@@ -1,0 +1,10 @@
+name = "CcyConv"
+uuid = "6414a262-d954-4101-8ae8-e45873c55136"
+version = "1.0.0"
+
+[deps]
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+
+[compat]
+Graphs = "1.9"
+julia = "1.8"
