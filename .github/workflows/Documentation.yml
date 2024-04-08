@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: julia-actions/add-julia-registry@v1
+      - uses: julia-actions/add-julia-registry@v2
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           registry: bhftbootcamp/Green
