@@ -8,7 +8,7 @@ makedocs(;
     modules = [CcyConv],
     sitename = "CcyConv.jl",
     format = Documenter.HTML(;
-        repolink = "https://github.com/bhftbootcamp/CcyConv.jl.git",
+        repolink = "https://github.com/bhftbootcamp/CcyConv.jl",
         canonical = "https://bhftbootcamp.github.io/CcyConv.jl",
         edit_link = "master",
         assets = String["assets/favicon.ico"],
