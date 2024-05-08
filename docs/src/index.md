@@ -133,7 +133,3 @@ julia> @time my_conv("ADA", "EOS")
   0.000130 seconds (46 allocations: 2.312 KiB)
 0.6004274502578457
 ```
-
-## Contributing
-
-Contributions to CcyConv are welcome! If you encounter a bug, have a feature request, or would like to contribute code, please open an issue or a pull request on GitHub.
