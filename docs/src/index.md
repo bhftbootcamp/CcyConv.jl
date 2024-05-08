@@ -47,15 +47,20 @@ using CcyConv
 
 crypto = FXGraph()
 
-push!(crypto, Price("ADA",  "USDT", 0.5911))
-push!(crypto, Price("ADA",  "BTC",  0.00000892))
-push!(crypto, Price("BTC",  "ETH",  19.9089))
-push!(crypto, Price("USDT", "ETH",  0.0003))
-push!(crypto, Price("ETH",  "BNB",  5.9404))
-push!(crypto, Price("USDT", "XRP",  1.6929))
-push!(crypto, Price("XRP",  "BNB",  NaN))
-push!(crypto, Price("USDC", "XRP",  1.6920))
-push!(crypto, Price("ADA",  "USDC", 0.5909))
+append!(
+    crypto,
+    [
+        Price("ADA", "USDT", 0.5911),
+        Price("ADA", "BTC", 0.00000892),
+        Price("BTC", "ETH", 19.9089),
+        Price("USDT", "ETH", 0.0003),
+        Price("ETH", "BNB", 5.9404),
+        Price("USDT", "XRP", 1.6929),
+        Price("XRP", "BNB", NaN),
+        Price("USDC", "XRP", 1.6920),
+        Price("ADA", "USDC", 0.5909),
+    ],
+)
 
 conv = conv_a_star(crypto, "ADA", "BNB")
 
