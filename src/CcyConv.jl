@@ -8,10 +8,12 @@ export conv_a_star,
     conv_ccys,
     conv_chain,
     conv_safe_value,
-    conv_value
+    conv_value,
+    your_max_alg,
+    your_min_alg
 
 using Graphs
-
+using SimpleWeightedGraphs
 """
     AbstractPrice
 
@@ -337,6 +339,91 @@ julia> conv_chain(conv)
 """
 function conv_a_star(fx::FXGraph, x...; kw...)::ConvRate
     return fx(MyCtx(), a_star_alg, x...; kw...)
+end
+
+
+@enum ExtremumType begin
+    MAX = 1
+    MIN = -1
+end
+
+function graph_format_adapter(graph::FXGraph)::SimpleWeightedGraph{UInt64}
+    edges::Base.KeySet{Tuple{UInt64, UInt64}} = keys(graph.edge_nodes)
+    num_paths::UInt64 = convert(UInt64,length(edges))
+    g::SimpleWeightedGraph{UInt64} = SimpleWeightedGraph(num_paths)
+    for edge in edges
+        price_value::Vector{CcyConv.AbstractPrice} = get(graph.edge_nodes, edge, 0)
+        weight:: Float64 = price_value[1].price # We're getting first element of the vector
+        vertex_from::UInt64 = edge[1]
+        vertex_to::UInt64 = edge[2]
+        add_edge!(g, vertex_from, vertex_to, weight)
+    end
+    return g
+end
+
+function get_weight_by_edge(graph::FXGraph, edge:: Tuple{UInt64, UInt64})::Float64
+    vertex_from::UInt64 = edge[1]
+    vertex_to::UInt64 = edge[2]
+    price_value::Union{Vector{CcyConv.AbstractPrice}, Int64} = get(graph.edge_nodes, (vertex_from, vertex_to), 0)
+    if price_value == 0 # If missing path, we're looking for the opposite direction
+        opposite_price_value::Vector{CcyConv.AbstractPrice} = get(graph.edge_nodes, (vertex_to, vertex_from), 0)
+        return 1 / opposite_price_value[1].price
+    end
+    return price_value[1].price
+end
+
+function find_extremum_product_metrics(all_paths_from_a_to_b, my_graph, type::ExtremumType)::
+    Tuple{Float64, Vector{UInt64}, Vector{Pair{UInt64, UInt64}}}
+    extrema_product::Float64 = type == MAX::ExtremumType ? -Inf : Inf
+    extrema_operator::Function = type == MAX::ExtremumType ? Base.:> : Base.:<
+    extrema_product_path::Vector{UInt64} = []
+    extrema_vector_of_pairs = Vector{Pair{UInt64, UInt64}}()
+    for path in all_paths_from_a_to_b
+        vector_of_pairs = Vector{Pair{UInt64, UInt64}}()
+        product::Float64 = 1.0 # Since we're working with multiplication, we start with 1
+        range = 1:length(path)-1 # We want pairs, starting from 1st element -> len - 1 elements
+        for i in range
+            vertex_from::UInt64 = path[i]
+            vertex_to::UInt64 = path[i + 1]
+            push!(vector_of_pairs, Pair(vertex_from, vertex_to))
+            weight::Float64 = get_weight_by_edge(my_graph, (vertex_from, vertex_to))
+            product *= weight
+        end
+        if extrema_operator(product, extrema_product)
+            extrema_product = product
+            extrema_product_path = path
+            extrema_vector_of_pairs = vector_of_pairs
+        end
+    end
+    return (extrema_product, extrema_product_path, extrema_vector_of_pairs)
+end
+
+# Your maximum algorithm
+function your_max_alg(
+    fx::FXGraph,
+    from_id::UInt64,
+    to_id::UInt64,
+)::Vector{Pair{UInt64,UInt64}}
+    adapted_graph = graph_format_adapter(fx)
+    all_paths_from_a_to_b = collect(all_simple_paths(adapted_graph, from_id, to_id))
+    metrics = find_extremum_product_metrics(all_paths_from_a_to_b, fx, MAX::ExtremumType)
+    # your alg code
+    return metrics[3] # We need only pairs of Price
+end
+
+
+# Your minimum algorithm
+function your_min_alg(
+    fx::FXGraph,
+    from_id::UInt64,
+    to_id::UInt64,
+)::Vector{Pair{UInt64,UInt64}}
+    # your alg code
+    adapted_graph = graph_format_adapter(fx)
+    all_paths_from_a_to_b = collect(all_simple_paths(adapted_graph, from_id, to_id))
+    metrics = find_extremum_product_metrics(all_paths_from_a_to_b, fx, MIN::ExtremumType)
+    # your alg code
+    return metrics[3] # We need only pairs of Price
 end
 
 end
