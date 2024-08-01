@@ -109,7 +109,7 @@ First, let's define a new context `MyCtx` that can store the previously requeste
 
 ```julia
 using CcyConv
-using CryptoAPIs
+using CryptoExchangeAPIs.Binance
 
 struct MyCtx <: CcyConv.AbstractCtx
     prices::Dict{String,Float64}
@@ -144,7 +144,7 @@ end
 function CcyConv.price(ctx::MyCtx, x::ExSymbol)::Float64
     return get!(ctx.prices, x.symbol) do
         try
-            CryptoAPIs.Binance.Spot.avg_price(; symbol = x.symbol).result.price
+            Binance.Spot.avg_price(; symbol = x.symbol).result.price
         catch
             NaN
         end
