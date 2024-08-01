@@ -84,7 +84,7 @@ The package lets you to set up a directed graph containing currencies as vertice
 
 ```julia
 using CcyConv
-using CryptoAPIs
+using CryptoExchangeAPIs.Binance
 
 struct MyCtx <: CcyConv.AbstractCtx
     prices::Dict{String,Float64}
@@ -109,7 +109,7 @@ end
 function CcyConv.price(ctx::MyCtx, x::ExSymbol)::Float64
     return get!(ctx.prices, x.symbol) do
         try
-            CryptoAPIs.Binance.Spot.avg_price(; symbol = x.symbol).result.price
+            Binance.Spot.avg_price(; symbol = x.symbol).result.price
         catch
             NaN
         end
