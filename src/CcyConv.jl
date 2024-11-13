@@ -1,16 +1,8 @@
 module CcyConv
 
-export ConvRate,
-    FXGraph,
-    Price
+export ConvRate, FXGraph, Price
 
-export conv_a_star,
-    conv_ccys,
-    conv_chain,
-    conv_safe_value,
-    conv_value,
-    conv_min,
-    conv_max
+export conv_a_star, conv_ccys, conv_chain, conv_safe_value, conv_value, conv_min, conv_max
 
 using Graphs
 
@@ -151,12 +143,12 @@ Adds a new edge to the graph `fx` corresponding to the currency pair `node`.
 function Base.push!(fx::FXGraph, node::P)::FXGraph where {P<:AbstractPrice}
     from_id = get!(fx.edge_encode, from_asset(node)) do
         add_vertex!(fx.graph)
-        length(fx.edge_encode) + 1
+        return length(fx.edge_encode) + 1
     end
 
     to_id = get!(fx.edge_encode, to_asset(node)) do
         add_vertex!(fx.graph)
-        length(fx.edge_encode) + 1
+        return length(fx.edge_encode) + 1
     end
 
     if !haskey(fx.edge_nodes, (from_id, to_id))
@@ -184,10 +176,12 @@ end
 
 function rm_edge!(fx::FXGraph, from_id::UInt64, to_id::UInt64)::Bool
     return if haskey(fx.edge_nodes, (from_id, to_id))
-        isempty(fx.edge_nodes[(from_id, to_id)]) || deleteat!(fx.edge_nodes[(from_id, to_id)], 1)
+        isempty(fx.edge_nodes[(from_id, to_id)]) ||
+            deleteat!(fx.edge_nodes[(from_id, to_id)], 1)
         isempty(fx.edge_nodes[(from_id, to_id)]) && rem_edge!(fx.graph, from_id, to_id)
     elseif haskey(fx.edge_nodes, (to_id, from_id))
-        isempty(fx.edge_nodes[(to_id, from_id)]) || deleteat!(fx.edge_nodes[(to_id, from_id)], 1)
+        isempty(fx.edge_nodes[(to_id, from_id)]) ||
+            deleteat!(fx.edge_nodes[(to_id, from_id)], 1)
         isempty(fx.edge_nodes[(to_id, from_id)]) && rem_edge!(fx.graph, to_id, from_id)
     end
 end
@@ -196,7 +190,7 @@ end
 
 function graph_path(path_alg::Function, fx::FXGraph, from_asset::String, to_asset::String)
     from_id = get(fx.edge_encode, from_asset, nothing)
-    to_id   = get(fx.edge_encode, to_asset, nothing)
+    to_id = get(fx.edge_encode, to_asset, nothing)
 
     return if isnothing(from_id) || isnothing(to_id)
         Vector{Pair{Int64,Int64}}()
@@ -204,7 +198,6 @@ function graph_path(path_alg::Function, fx::FXGraph, from_asset::String, to_asse
         path_alg(fx, from_id, to_id)
     end
 end
-
 
 """
     ConvRate
@@ -276,24 +269,31 @@ Applies algorithm `path_alg` to find a path on graph `fx` between base currency 
 """
 function FXGraph(::AbstractCtx, ::Function, ::String, ::String) end
 
-function (fx::FXGraph)(ctx::AbstractCtx, path_alg::Function, from_asset::String, to_asset::String)::ConvRate
+function (fx::FXGraph)(
+    ctx::AbstractCtx,
+    path_alg::Function,
+    from_asset::String,
+    to_asset::String,
+)::ConvRate
     from_asset == to_asset && return ConvRate(from_asset, to_asset, 1.0)
     g_path = graph_path(path_alg, fx, from_asset, to_asset)
     isempty(g_path) && return ConvRate(from_asset, to_asset, NaN)
     chain = Vector{AbstractPrice}()
     conv::Float64 = 1.0
     for (from_id::UInt64, to_id::UInt64) in g_path
-        val::Float64 = if has_edge(fx.graph, from_id, to_id) && haskey(fx.edge_nodes, (from_id, to_id))
-            item, value = price_first_non_nan(ctx, fx.edge_nodes[(from_id, to_id)])
-            item !== nothing && push!(chain, item)
-            value
-        elseif has_edge(fx.graph, to_id, from_id) && haskey(fx.edge_nodes, (to_id, from_id))
-            item, value = price_first_non_nan(ctx, fx.edge_nodes[(to_id, from_id)])
-            item !== nothing && push!(chain, item)
-            inv(value)
-        else
-            NaN
-        end
+        val::Float64 =
+            if has_edge(fx.graph, from_id, to_id) && haskey(fx.edge_nodes, (from_id, to_id))
+                item, value = price_first_non_nan(ctx, fx.edge_nodes[(from_id, to_id)])
+                item !== nothing && push!(chain, item)
+                value
+            elseif has_edge(fx.graph, to_id, from_id) &&
+                   haskey(fx.edge_nodes, (to_id, from_id))
+                item, value = price_first_non_nan(ctx, fx.edge_nodes[(to_id, from_id)])
+                item !== nothing && push!(chain, item)
+                inv(value)
+            else
+                NaN
+            end
         (isnan(val) || isinf(val)) && rm_edge!(fx, from_id, to_id)
         conv *= val
     end
