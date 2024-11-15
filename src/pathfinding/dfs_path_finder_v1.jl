@@ -6,7 +6,12 @@ using Graphs
 """
     Find all paths between two nodes using DFS
 """
-function find_all_paths(fx::CcyConv.FXGraph, from_id::UInt64, to_id::UInt64; max_depth::Int = 10)
+function find_all_paths(
+    fx::CcyConv.FXGraph,
+    from_id::UInt64,
+    to_id::UInt64;
+    max_depth::Int = 10,
+)
     paths = Vector{Vector{UInt64}}()
     visited = fill(false, nv(fx.graph))
     current_path = [from_id]

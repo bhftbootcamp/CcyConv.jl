@@ -8,7 +8,7 @@ Calculate total conversion rate and collect prices for a path.
 """
 function calculate_path_rate(
     fx::FXGraph,
-    path::Vector{UInt64}
+    path::Vector{UInt64},
 )::Tuple{Float64,Vector{AbstractPrice}}
     isempty(path) && return (1.0, AbstractPrice[])
     length(path) == 1 && return (1.0, AbstractPrice[])
@@ -43,7 +43,7 @@ Convenience method accepting currency names instead of IDs.
 """
 function calculate_path_rate(
     fx::FXGraph,
-    path::Vector{String}
+    path::Vector{String},
 )::Tuple{Float64,Vector{AbstractPrice}}
     path_ids = [get_currency_id(fx, currency) for currency in path]
     return calculate_path_rate(fx, path_ids)

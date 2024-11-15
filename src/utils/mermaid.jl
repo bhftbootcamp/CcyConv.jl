@@ -14,8 +14,8 @@ function to_mermaid(
 
     for ((u, v), prices) in fx.edge_nodes
         # Skip if we've already processed this edge pair
-        (min(u,v), max(u,v)) in processed_edges && continue
-        
+        (min(u, v), max(u, v)) in processed_edges && continue
+
         from_ccy = nothing
         to_ccy = nothing
         for (currency, id) in fx.edge_encode
@@ -46,7 +46,7 @@ function to_mermaid(
             mermaid *= "    $(to_ccy) -.->|$(rev_price)| $(from_ccy)\n"
         end
 
-        push!(processed_edges, (min(u,v), max(u,v)))
+        push!(processed_edges, (min(u, v), max(u, v)))
     end
 
     return mermaid

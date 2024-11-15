@@ -187,5 +187,4 @@ using CcyConv.Pathfinding
             end
         end
     end
-    
 end

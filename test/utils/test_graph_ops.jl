@@ -1,5 +1,4 @@
-using CcyConv:
-    get_currency, UnknownCurrencyError
+using CcyConv: get_currency, UnknownCurrencyError
 
 @testset "get_currency" begin
     my_graph = FXGraph()
@@ -21,18 +20,12 @@ using CcyConv:
     @testset "non-existent currency" begin
         # Test invalid ID
         invalid_id = UInt64(999)
-        @test_throws UnknownCurrencyError get_currency(
-            my_graph,
-            invalid_id,
-        )
+        @test_throws UnknownCurrencyError get_currency(my_graph, invalid_id)
     end
 
     @testset "empty graph" begin
         empty_graph = FXGraph()
         # Test with ID on empty graph
-        @test_throws UnknownCurrencyError get_currency(
-            empty_graph,
-            UInt64(1),
-        )
+        @test_throws UnknownCurrencyError get_currency(empty_graph, UInt64(1))
     end
 end

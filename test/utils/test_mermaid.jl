@@ -4,10 +4,8 @@ using CcyConv: to_mermaid
 @testset "to_mermaid" begin
     # Helper function to parse and sort Mermaid edges
     function parse_mermaid_edges(mermaid::String)
-        lines = filter(
-            l -> !isempty(l) && !startswith(l, "graph"),
-            split(strip(mermaid), '\n'),
-        )
+        lines =
+            filter(l -> !isempty(l) && !startswith(l, "graph"), split(strip(mermaid), '\n'))
         return sort(strip.(lines))
     end
 

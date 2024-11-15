@@ -14,18 +14,18 @@ missing = find_missing_edges(graph)
 """
 function find_missing_edges(fx::FXGraph)::Vector{Tuple{UInt8,UInt8,Float64}}
     missing_edges = Vector{Tuple{UInt8,UInt8,Float64}}()
-    
+
     for ((u, v), prices) in fx.edge_nodes
         # Skip if reverse edge exists
         haskey(fx.edge_nodes, (v, u)) && continue
-        
+
         # Calculate implied reverse price
         forward_price = CcyConv.price(prices[1])
         reverse_price = 1 / forward_price
-        
+
         push!(missing_edges, (v, u, reverse_price))
     end
-    
+
     # Sort for consistent output
     sort!(missing_edges)
     return missing_edges
@@ -53,45 +53,48 @@ Create a new FXGraph where each edge has exactly two prices (forward and reverse
 # Returns
 - `FXGraph`: New graph where each edge has exactly two prices
 """
-function create_graph_with_reversed_edges(fx::FXGraph; behavior::ReverseBehavior=DUAL_PRICES)::FXGraph
+function create_graph_with_reversed_edges(
+    fx::FXGraph;
+    behavior::ReverseBehavior = DUAL_PRICES,
+)::FXGraph
     new_graph = FXGraph()
     processed = Set{Tuple{UInt8,UInt8}}()
-    
+
     # Copy the currency encoding
     for (ccy, id) in fx.edge_encode
         new_graph.edge_encode[ccy] = id
         add_vertex!(new_graph.graph)
     end
-    
+
     for ((u, v), prices) in fx.edge_nodes
         # Only process each edge pair once
-        (min(u,v), max(u,v)) in processed && continue
-        
+        (min(u, v), max(u, v)) in processed && continue
+
         # Get forward price (always use first price if multiple exist)
         forward_price = CcyConv.price(prices[1])
-        
+
         # Determine reverse price based on behavior
         reverse_price = if behavior == DUAL_PRICES && haskey(fx.edge_nodes, (v, u))
             CcyConv.price(fx.edge_nodes[(v, u)][1])
         else
             1 / forward_price
         end
-        
+
         # Add both prices to forward edge
         new_graph.edge_nodes[(u, v)] = AbstractPrice[
             Price(from_asset(prices[1]), to_asset(prices[1]), forward_price),
-            Price(to_asset(prices[1]), from_asset(prices[1]), reverse_price)
+            Price(to_asset(prices[1]), from_asset(prices[1]), reverse_price),
         ]
-        
+
         # Add edge to graph
         add_edge!(new_graph.graph, Int64(u), Int64(v))
-        
-        push!(processed, (min(u,v), max(u,v)))
+
+        push!(processed, (min(u, v), max(u, v)))
     end
 
     # Verify each processed edge has exactly 2 prices
     @assert all(length(prices) == 2 for prices in values(new_graph.edge_nodes))
     @assert length(new_graph.edge_nodes) == length(processed)
-    
+
     return new_graph
 end

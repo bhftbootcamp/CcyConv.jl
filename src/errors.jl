@@ -21,7 +21,7 @@ end
 
 # Custom show method for better error messages
 function Base.showerror(io::IO, e::UnknownCurrencyError)
-    print(io, "UnknownCurrencyError: ", e.message)
+    return print(io, "UnknownCurrencyError: ", e.message)
 end
 
 """
@@ -42,11 +42,21 @@ struct InvalidConversionError <: CcyConvError
     details::Union{Nothing,String}
 end
 
-InvalidConversionError(msg::String, from::String, to::String) = 
-    InvalidConversionError(msg, from, to, nothing)
+function InvalidConversionError(msg::String, from::String, to::String)
+    return InvalidConversionError(msg, from, to, nothing)
+end
 
 function Base.showerror(io::IO, e::InvalidConversionError)
-    print(io, "InvalidConversionError: ", e.message, " (", e.from_asset, " -> ", e.to_asset, ")")
+    print(
+        io,
+        "InvalidConversionError: ",
+        e.message,
+        " (",
+        e.from_asset,
+        " -> ",
+        e.to_asset,
+        ")",
+    )
     if !isnothing(e.details)
         print(io, "\nDetails: ", e.details)
     end
