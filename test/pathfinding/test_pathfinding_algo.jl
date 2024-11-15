@@ -4,10 +4,7 @@ using CcyConv.Pathfinding
     for pathfinding_module in [
         CcyConv.Pathfinding.DFSPathFinder,
         CcyConv.Pathfinding.DFSPathFinder_v2,
-        CcyConv.Pathfinding.ExtremumPathFinder,
-        #CcyConv.Pathfinding.SpanningTreePathFinder, # CcyConv.Pathfinding.SpanningTreePathFinder |   33     9     42  2.1s
-        #CcyConv.Pathfinding.BellmanFordPathFinder,
-        #CcyConv.Pathfinding.AdvantageousPathFinder
+        CcyConv.Pathfinding.ExtremumPathFinder
     ]
         conv_max = pathfinding_module.conv_max
         conv_min = pathfinding_module.conv_min

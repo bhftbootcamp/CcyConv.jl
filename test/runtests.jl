@@ -9,7 +9,6 @@ using CcyConv
         include("utils/test_path_ops.jl")
         include("utils/test_graph_analysis.jl")
         include("utils/test_mermaid.jl")
-        include("test_utils.jl")
     end
     @testset "pathfinding" begin
         include("pathfinding/test_conv_a_star.jl")
