@@ -1,5 +1,5 @@
 using CcyConv:
-    get_currency, calculate_path_rate, find_missing_edges, create_graph_with_reversed_edges, ReverseBehavior, DUAL_PRICES, SINGLE_PRICES, to_mermaid
+    get_currency, UnknownCurrencyError, calculate_path_rate, find_missing_edges, create_graph_with_reversed_edges, ReverseBehavior, DUAL_PRICES, SINGLE_PRICES, to_mermaid
 using CcyConv.Pathfinding.AStar: conv as conv_a_star
 
 const RTOL = 0.01
@@ -25,7 +25,7 @@ const RTOL = 0.01
         @testset "non-existent currency" begin
             # Test invalid ID
             invalid_id = UInt64(999)
-            @test_throws ErrorException("Currency not found") get_currency(
+            @test_throws UnknownCurrencyError get_currency(
                 my_graph,
                 invalid_id,
             )
@@ -34,7 +34,7 @@ const RTOL = 0.01
         @testset "empty graph" begin
             empty_graph = FXGraph()
             # Test with ID on empty graph
-            @test_throws ErrorException("Currency not found") get_currency(
+            @test_throws UnknownCurrencyError get_currency(
                 empty_graph,
                 UInt64(1),
             )
