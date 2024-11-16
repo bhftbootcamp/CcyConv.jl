@@ -1,7 +1,6 @@
 using CcyConv: get_currency, UnknownCurrencyError, get_currency_id
 
 @testset "get_currency" begin
-
     @testset "new graph" begin
         my_graph = FXGraph()
         push!(my_graph, Price("USD", "EUR", 0.85))

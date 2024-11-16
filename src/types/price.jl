@@ -63,37 +63,81 @@ function price(ctx::AbstractCtx, x::AbstractPrice)::Float64
 end
 
 """
-    Price <: AbstractPrice
+    Price{T} <: AbstractPrice
 
-A type representing the price of currency pair.
+A type representing a currency pair price.
+T can be either Float64 (backward compatible) or AbstractConversionFunction.
 
 ## Fields
-- `from_asset::String`: Base currency name.
-- `to_asset::String`: Quote currency name.
-- `price::Float64`: The currency pair price.
+- `from_asset::String`: Base currency name
+- `to_asset::String`: Quote currency name
+- `conversion::T`: The conversion rate or function
 """
-struct Price <: AbstractPrice
+struct Price{T} <: AbstractPrice
     from_asset::String
     to_asset::String
-    price::Float64
+    conversion::T
+
+    # Constructor for Float64 (backward compatibility)
+    function Price(from_asset::String, to_asset::String, rate::Float64)
+        return new{LinearConversionFunction}(
+            from_asset,
+            to_asset,
+            LinearConversionFunction(rate),
+        )
+    end
+
+    # Constructor for conversion functions
+    function Price(
+        from_asset::String,
+        to_asset::String,
+        conversion::AbstractConversionFunction,
+    )
+        return new{typeof(conversion)}(from_asset, to_asset, conversion)
+    end
 end
 
-function from_asset(x::Price)::String
-    return x.from_asset
+# Interface implementations
+from_asset(p::Price)::String = p.from_asset
+to_asset(p::Price)::String = p.to_asset
+price(p::Price)::Float64 = convert(p.conversion, 1.0)
+
+"""
+    convert_amount(p::Price, amount::Float64)::Float64
+
+Convert an amount using the price's conversion function.
+"""
+function convert_amount(p::Price, amount::Float64)::Float64
+    return convert(p.conversion, amount)
 end
 
-function to_asset(x::Price)::String
-    return x.to_asset
+"""
+    rev_convert_amount(x::Price, amount::Float64)::Float64
+
+Convert an amount using the price's reverse conversion function.
+"""
+function rev_convert_amount(p::Price, amount::Float64)::Float64
+    return rev_convert(p.conversion, amount)
 end
 
-function price(x::Price)::Float64
-    return x.price
-end
+"""
+    price_first_non_nan(ctx::AbstractCtx, items::Vector{P}) where {P<:AbstractPrice}
 
+Find the first non-NaN price in a list of prices.
+"""
 function price_first_non_nan(ctx::AbstractCtx, items::Vector{P}) where {P<:AbstractPrice}
     for item in items
         value = price(ctx, item)
         isnan(value) || return (item, value)
     end
     return (nothing, NaN)
+end
+
+"""
+    reverse_price(x::Price)::Price
+
+Create a new Price with currencies swapped and reverse conversion.
+"""
+function reverse_price(x::Price)::Price
+    return Price(to_asset(x), from_asset(x), ReverseConversionFunction(x.conversion))
 end

@@ -108,8 +108,6 @@ Applies algorithm `path_alg` to find a path on graph `fx` between base currency 
     This method is low-level and is required when using a custom context.
 
 """
-function FXGraph(::AbstractCtx, ::Function, ::String, ::String) end
-
 function (fx::FXGraph)(
     ctx::AbstractCtx,
     path_alg::Function,

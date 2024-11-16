@@ -36,7 +36,14 @@ Asserts that the conversion rate of `x` is not a `NaN` value and then returns it
 Otherwise throws an `AssertionError`.
 """
 function conv_safe_value(x::ConvRate)::Float64
-    @assert !isnan(x.conv) "conv is $(x.conv)"
+    isnan(x.conv) && throw(
+        InvalidConversionError(
+            "Conversion rate is NaN: $(x.conv)",
+            x.from_asset,
+            x.to_asset,
+            "No valid conversion path exists between currencies",
+        ),
+    )
     return x.conv
 end
 

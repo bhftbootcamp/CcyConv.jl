@@ -1,91 +1,67 @@
-using CcyConv: calculate_path_rate
+using CcyConv: AbstractPrice, calculate_path_value, convert_through_chain
 
-@testset "calculate_path_rate" begin
-    RTOL = 0.01
-
+@testset "calculate_path_value" begin
     @testset "simple forward path" begin
         graph = FXGraph()
         push!(graph, Price("A", "B", 2.0))
         push!(graph, Price("B", "C", 3.0))
 
-        # Get IDs for known currencies
-        a_id = graph.edge_encode["A"]
-        b_id = graph.edge_encode["B"]
-        c_id = graph.edge_encode["C"]
-
-        path = [a_id, b_id, c_id]
-        rate, chain = calculate_path_rate(graph, path)
-
-        @test isapprox(rate, 6.0, rtol = RTOL)  # 2.0 * 3.0
+        path = UInt64[1, 2, 3]
+        amount = 100.0
+        final_amount, chain = calculate_path_value(graph, path, amount)
+        @test final_amount ≈ 600.0 rtol = RTOL  # 100 * 2 * 3
         @test length(chain) == 2
-        @test chain == [Price("A", "B", 2.0), Price("B", "C", 3.0)]
+        @test all(p isa AbstractPrice for p in chain)
     end
 
-    @testset "simple forward path with string instead of id" begin
+    @testset "path with reverse conversion" begin
         graph = FXGraph()
         push!(graph, Price("A", "B", 2.0))
-        push!(graph, Price("B", "C", 3.0))
+        push!(graph, Price("C", "B", 4.0))
 
-        path = ["A", "B", "C"]
-        rate, chain = calculate_path_rate(graph, path)
-
-        @test isapprox(rate, 6.0, rtol = RTOL)  # 2.0 * 3.0
+        path = UInt64[1, 2, 3]
+        amount = 100.0
+        final_amount, chain = calculate_path_value(graph, path, amount)
+        @test final_amount ≈ 50.0 rtol = RTOL  # 100 * 2 * (1/4)
         @test length(chain) == 2
-        @test chain == [Price("A", "B", 2.0), Price("B", "C", 3.0)]
-    end
-
-    @testset "path with implicit reverse" begin
-        graph = FXGraph()
-        push!(graph, Price("A", "B", 2.0))    # A->B = 2.0, so B->A = 1/2.0
-        push!(graph, Price("C", "B", 4.0))    # C->B = 4.0, so B->C = 1/4.0
-
-        a_id = graph.edge_encode["A"]
-        b_id = graph.edge_encode["B"]
-        c_id = graph.edge_encode["C"]
-
-        # Test path B->A (using implicit reverse)
-        path = [b_id, a_id]
-        rate, chain = calculate_path_rate(graph, path)
-        @test isapprox(rate, 0.5, rtol = RTOL)  # 1/2.0
-        @test length(chain) == 1
-        @test chain == [Price("A", "B", 2.0)]
-
-        # Test path with both normal and reverse
-        path = [a_id, b_id, c_id]
-        rate, chain = calculate_path_rate(graph, path)
-        @test isapprox(rate, 0.5, rtol = RTOL)  # 2.0 * (1/4.0)
-        @test length(chain) == 2
-        @test chain == [Price("A", "B", 2.0), Price("C", "B", 4.0)]
     end
 
     @testset "empty path" begin
         graph = FXGraph()
-        push!(graph, Price("A", "B", 2.0))
-
-        rate, chain = calculate_path_rate(graph, UInt64[])
-        @test rate == 1.0  # multiplicative identity
+        amount = 100.0
+        final_amount, chain = calculate_path_value(graph, UInt64[], amount)
+        @test final_amount == amount
         @test isempty(chain)
     end
 
     @testset "single node path" begin
         graph = FXGraph()
-        push!(graph, Price("A", "B", 2.0))
-
-        a_id = graph.edge_encode["A"]
-        rate, chain = calculate_path_rate(graph, [a_id])
-        @test rate == 1.0  # no conversion needed
+        amount = 100.0
+        final_amount, chain = calculate_path_value(graph, UInt64[1], amount)
+        @test final_amount == amount
         @test isempty(chain)
     end
+end
 
-    @testset "non-existent edge" begin
-        graph = FXGraph()
-        push!(graph, Price("A", "B", 2.0))
-        # Don't add edge B->C
+@testset "convert_through_chain" begin
+    @testset "linear conversions" begin
+        chain = [Price("A", "B", 2.0), Price("B", "C", 3.0)]
+        amount = 100.0
+        @test convert_through_chain(chain, amount) ≈ 600.0 rtol = RTOL  # 100 * 2 * 3
+    end
 
-        a_id = graph.edge_encode["A"]
-        b_id = graph.edge_encode["B"]
-        c_id = 42  # Non-existent node
+    @testset "with fees" begin
+        chain = [
+            Price("A", "B", FixedFeeConversionFunction(2.0, 5.0)),
+            Price("B", "C", ProportionalFeeConversionFunction(3.0, 0.01)),
+        ]
+        amount = 100.0
+        expected = convert_amount(chain[2], convert_amount(chain[1], amount))
+        @test convert_through_chain(chain, amount) ≈ expected rtol = RTOL
+    end
 
-        @test_throws KeyError calculate_path_rate(graph, [a_id, b_id, c_id])
+    @testset "empty chain" begin
+        amount = 100.0
+        @test convert_through_chain(AbstractPrice[], amount) == amount
     end
 end

@@ -1,13 +1,11 @@
 using CcyConv.Pathfinding
 
 @testset "Pathfinding algorithm" begin
-    for pathfinding_module in [
-        CcyConv.Pathfinding.DFSPathFinder,
-        CcyConv.Pathfinding.DFSPathFinder_v2,
-        CcyConv.Pathfinding.ExtremumPathFinder
-    ]
-        conv_max = pathfinding_module.conv_max
-        conv_min = pathfinding_module.conv_min
+    for pathfinding_module in
+        [CcyConv.Pathfinding.DFSPathFinder, CcyConv.Pathfinding.ExtremumPathFinder]
+
+        conv_max = pathfinding_module.conv_max  # Get maximum value path (highest sale price)
+        conv_min = pathfinding_module.conv_min  # Get minimum value path (lowest sale price)
 
         @testset "$pathfinding_module" begin
             my_graph = FXGraph()

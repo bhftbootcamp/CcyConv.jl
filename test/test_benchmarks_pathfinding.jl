@@ -31,7 +31,7 @@ using Random
             _ = 1:test_cases_per_size
         ]
 
-        for algo in [DFSPathFinder, DFSPathFinder_v2, ExtremumPathFinder]
+        for algo in [DFSPathFinder, ExtremumPathFinder]
             println("\nBenchmarking $(algo):")
 
             println(" conv_max")
