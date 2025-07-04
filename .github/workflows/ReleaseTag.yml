@@ -13,9 +13,9 @@ jobs:
   release:
     name: Release pushed tag
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - name: Create release
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
