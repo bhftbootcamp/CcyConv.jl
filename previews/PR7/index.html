@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · CcyConv.jl</title><meta name="title" content="Home · CcyConv.jl"/><meta property="og:title" content="Home · CcyConv.jl"/><meta property="twitter:title" content="Home · CcyConv.jl"/><meta name="description" content="Documentation for CcyConv.jl."/><meta property="og:description" content="Documentation for CcyConv.jl."/><meta property="twitter:description" content="Documentation for CcyConv.jl."/><meta property="og:url" content="https://bhftbootcamp.github.io/CcyConv.jl/"/><meta property="twitter:url" content="https://bhftbootcamp.github.io/CcyConv.jl/"/><link rel="canonical" href="https://bhftbootcamp.github.io/CcyConv.jl/"/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href>CcyConv.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Usage"><span>Usage</span></a></li></ul></li><li><a class="tocitem" href="pages/manual/">Manual</a></li><li><a class="tocitem" href="pages/api_reference/">API Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/bhftbootcamp/CcyConv.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/bhftbootcamp/CcyConv.jl/blob/master/docs/src/index.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="CcyConv.jl"><a class="docs-heading-anchor" href="#CcyConv.jl">CcyConv.jl</a><a id="CcyConv.jl-1"></a><a class="docs-heading-anchor-permalink" href="#CcyConv.jl" title="Permalink"></a></h1><p>CcyConv is a Julia package for performing currency conversions. It allows for direct and multi-step conversions using the latest exchange 💱 rates.</p><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>If you haven&#39;t installed our <a href="https://github.com/bhftbootcamp/Green">local registry</a> yet, do that first:</p><pre><code class="nohighlight hljs">] registry add https://github.com/bhftbootcamp/Green.git</code></pre><p>To install CcyConv, simply use the Julia package manager:</p><pre><code class="language-julia hljs">] add CcyConv</code></pre><h2 id="Usage"><a class="docs-heading-anchor" href="#Usage">Usage</a><a id="Usage-1"></a><a class="docs-heading-anchor-permalink" href="#Usage" title="Permalink"></a></h2><p>Here&#39;s how you can find a conversion path from <code>ADA</code> to <code>BNB</code>:</p><div class="mermaid">graph LR;
+    ADA  --&gt; |0.5911| USDT;
+    ADA  -.-&gt;|0.00000892| BTC;
+    BTC  -.-&gt;|19.9089| ETH;
+    USDT --&gt; |0.0003| ETH;
+    ETH  --&gt; |5.9404| BNB;
+    USDT -.-&gt;|1.6929| XRP;
+    XRP  -.- |NaN| BNB;
+    USDC -.- |1.6920| XRP;
+    ADA  -.- |0.5909| USDC;
+
+    classDef julia_blue fill:#4063D8,stroke:#333,stroke-width:2px;
+    classDef julia_green fill:#389826,stroke:#333,stroke-width:2px;
+    classDef julia_red fill:#CB3C33,stroke:#333,stroke-width:2px;
+    classDef julia_purple fill:#9558B2,stroke:#333,stroke-width:2px;
+    classDef def_color fill:#eee,stroke:#ccc,stroke-width:2px;
+
+    class ADA julia_blue;
+    class USDT julia_red;
+    class ETH julia_green;
+    class BNB julia_purple;</div><pre><code class="language-julia hljs">using CcyConv
+
+crypto = FXGraph()
+
+append!(
+    crypto,
+    [
+        Price(&quot;ADA&quot;, &quot;USDT&quot;, 0.5911),
+        Price(&quot;ADA&quot;, &quot;BTC&quot;, 0.00000892),
+        Price(&quot;BTC&quot;, &quot;ETH&quot;, 19.9089),
+        Price(&quot;USDT&quot;, &quot;ETH&quot;, 0.0003),
+        Price(&quot;ETH&quot;, &quot;BNB&quot;, 5.9404),
+        Price(&quot;USDT&quot;, &quot;XRP&quot;, 1.6929),
+        Price(&quot;XRP&quot;, &quot;BNB&quot;, NaN),
+        Price(&quot;USDC&quot;, &quot;XRP&quot;, 1.6920),
+        Price(&quot;ADA&quot;, &quot;USDC&quot;, 0.5909),
+    ],
+)
+
+conv = conv_a_star(crypto, &quot;ADA&quot;, &quot;BNB&quot;)
+
+julia&gt; conv_value(conv)
+0.0010534111319999999
+
+julia&gt; conv_chain(conv)
+3-element Vector{CcyConv.AbstractPrice}:
+ Price(&quot;ADA&quot;,  &quot;USDT&quot;, 0.5911)
+ Price(&quot;USDT&quot;, &quot;ETH&quot;,  0.0003)
+ Price(&quot;ETH&quot;,  &quot;BNB&quot;,  5.9404)</code></pre><p>The package lets you to set up a directed graph containing currencies as vertices and convert rates as edges. The graph can fill the missing data from anywhere and directly during the running conversion path calculation.</p><pre><code class="language-julia hljs">using CcyConv
+using CryptoExchangeAPIs.Binance
+
+struct MyCtx &lt;: CcyConv.AbstractCtx
+    prices::Dict{String,Float64}
+
+    MyCtx() = new(Dict{String,Float64}())
+end
+
+struct ExSymbol &lt;: CcyConv.AbstractPrice
+    base_asset::String
+    quote_asset::String
+    symbol::String
+end
+
+function CcyConv.from_asset(x::ExSymbol)::String
+    return x.base_asset
+end
+
+function CcyConv.to_asset(x::ExSymbol)::String
+    return x.quote_asset
+end
+
+function CcyConv.price(ctx::MyCtx, x::ExSymbol)::Float64
+    return get!(ctx.prices, x.symbol) do
+        try
+            Binance.Spot.avg_price(; symbol = x.symbol).result.price
+        catch
+            NaN
+        end
+    end
+end
+
+my_graph = FXGraph()
+my_ctx = MyCtx()
+
+append!(
+    my_graph,
+    [
+        ExSymbol(&quot;ADA&quot;,  &quot;BTC&quot;,  &quot;ADABTC&quot;),
+        ExSymbol(&quot;BTC&quot;,  &quot;USDT&quot;, &quot;BTCUSDT&quot;),
+        ExSymbol(&quot;PEPE&quot;, &quot;USDT&quot;, &quot;PEPEUSDT&quot;),
+        ExSymbol(&quot;EOS&quot;,  &quot;USDT&quot;, &quot;EOSUSDT&quot;),
+    ],
+)
+
+my_conv = (to, from) -&gt; conv_value(my_graph(my_ctx, CcyConv.a_star_alg, to, from))
+
+julia&gt; @time my_conv(&quot;ADA&quot;, &quot;EOS&quot;)
+  4.740000 seconds (1.80 M allocations: 120.606 MiB, 0.52% gc time, 14.55% compilation time)
+0.6004274502578457
+
+julia&gt; @time my_conv(&quot;ADA&quot;, &quot;EOS&quot;)
+  0.000130 seconds (46 allocations: 2.312 KiB)
+0.6004274502578457</code></pre><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+mermaid.initialize({
+    startOnLoad: true,
+    theme: "neutral"
+});
+</script></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="pages/manual/">Manual »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Thursday 1 August 2024 19:09">Thursday 1 August 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

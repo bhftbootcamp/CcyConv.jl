@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Manual · CcyConv.jl</title><meta name="title" content="Manual · CcyConv.jl"/><meta property="og:title" content="Manual · CcyConv.jl"/><meta property="twitter:title" content="Manual · CcyConv.jl"/><meta name="description" content="Documentation for CcyConv.jl."/><meta property="og:description" content="Documentation for CcyConv.jl."/><meta property="twitter:description" content="Documentation for CcyConv.jl."/><meta property="og:url" content="https://bhftbootcamp.github.io/CcyConv.jl/pages/manual/"/><meta property="twitter:url" content="https://bhftbootcamp.github.io/CcyConv.jl/pages/manual/"/><link rel="canonical" href="https://bhftbootcamp.github.io/CcyConv.jl/pages/manual/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">CcyConv.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li class="is-active"><a class="tocitem" href>Manual</a><ul class="internal"><li><a class="tocitem" href="#Basic-usage"><span>Basic usage</span></a></li><li><a class="tocitem" href="#Custom-price"><span>Custom price</span></a></li><li><a class="tocitem" href="#context_manual"><span>Using context</span></a></li><li><a class="tocitem" href="#Pathfinding-algorithm"><span>Pathfinding algorithm</span></a></li></ul></li><li><a class="tocitem" href="../api_reference/">API Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Manual</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Manual</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/bhftbootcamp/CcyConv.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/bhftbootcamp/CcyConv.jl/blob/master/docs/src/pages/manual.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Manual"><a class="docs-heading-anchor" href="#Manual">Manual</a><a id="Manual-1"></a><a class="docs-heading-anchor-permalink" href="#Manual" title="Permalink"></a></h1><p>Let&#39;s take a closer look at a few examples of how this package can be used in practice.</p><h2 id="Basic-usage"><a class="docs-heading-anchor" href="#Basic-usage">Basic usage</a><a id="Basic-usage-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-usage" title="Permalink"></a></h2><p>In the simplest case, you need to create a new <a href="../api_reference/#FXGraph"><code>FXGraph</code></a> graph object:</p><pre><code class="language-julia hljs">using CcyConv
+
+# Create a new graph
+crypto = FXGraph()</code></pre><p>Then add information about currency pairs to it as <a href="../api_reference/#Price"><code>Price</code></a> objects:</p><pre><code class="language-julia hljs"># Add exchange rates
+push!(crypto, Price(&quot;ADA&quot;,  &quot;USDT&quot;, 0.4037234))
+push!(crypto, Price(&quot;USDT&quot;, &quot;BTC&quot;,  0.0000237))
+push!(crypto, Price(&quot;BTC&quot;,  &quot;ETH&quot;,  18.808910))
+push!(crypto, Price(&quot;ETH&quot;,  &quot;ALGO&quot;, 14735.460))
+
+# Or use &#39;append!&#39;:
+append!(
+    crypto,
+    [
+        Price(&quot;ADA&quot;,  &quot;USDT&quot;, 0.4037234),
+        Price(&quot;USDT&quot;, &quot;BTC&quot;,  0.0000237),
+        Price(&quot;BTC&quot;,  &quot;ETH&quot;,  18.808910),
+        Price(&quot;ETH&quot;,  &quot;ALGO&quot;, 14735.460),
+    ],
+);</code></pre><p>Finally, you can use one of the <a href="../api_reference/#algorithms"><code>algorithms</code></a> to find a path between required currency pairs:</p><pre><code class="language-julia-repl hljs"># Convert ADA to BTC
+julia&gt; conv = conv_a_star(crypto, &quot;ADA&quot;, &quot;BTC&quot;);
+
+julia&gt; conv_value(conv)
+0.000009582698067
+
+julia&gt; conv_chain(conv)
+2-element Vector{CcyConv.AbstractPrice}:
+ Price(&quot;ADA&quot;,  &quot;USDT&quot;, 0.4037234)
+ Price(&quot;USDT&quot;, &quot;BTC&quot;,  0.0000237)</code></pre><h2 id="Custom-price"><a class="docs-heading-anchor" href="#Custom-price">Custom price</a><a id="Custom-price-1"></a><a class="docs-heading-anchor-permalink" href="#Custom-price" title="Permalink"></a></h2><p>You can also define a new custom subtype of an abstract type <a href="../api_reference/#CcyConv.AbstractPrice"><code>AbstractPrice</code></a> representing the price of a currency pair and, for example, having information about the exchange to which it belongs. In this case, there may be several edges between two currencies with different prices of the corresponding exchanges.</p><pre><code class="language-julia hljs">using CcyConv
+
+# Create a new graph
+crypto = FXGraph()
+
+# Custom Price
+struct MyPrice &lt;: CcyConv.AbstractPrice
+    exchange::String
+    from_asset::String
+    to_asset::String
+    price::Float64
+end</code></pre><p>In this case, it is important to override the following getter methods for the new custom type <code>MyPrice</code> because they will be used during pathfinding:</p><pre><code class="language-julia hljs">CcyConv.from_asset(x::MyPrice) = x.from_asset
+CcyConv.to_asset(x::MyPrice) = x.to_asset
+CcyConv.price(x::MyPrice) = x.price</code></pre><p>Now we can add objects of our new custom type to the graph and find the conversion path using the available <a href="../api_reference/#algorithms"><code>algorithms</code></a>:</p><pre><code class="language-julia hljs"># Add exchange rates
+push!(crypto, MyPrice(&quot;Binance&quot;, &quot;ADA&quot;,  &quot;USDT&quot;, 0.4037234))
+push!(crypto, MyPrice(&quot;Huobi&quot;,   &quot;USDT&quot;, &quot;BTC&quot;,  0.0000237))
+push!(crypto, MyPrice(&quot;Okex&quot;,    &quot;BTC&quot;,  &quot;ETH&quot;,  18.808910))
+push!(crypto, MyPrice(&quot;Gateio&quot;,  &quot;ETH&quot;,  &quot;ALGO&quot;, 14735.460))</code></pre><pre><code class="language-julia-repl hljs"># Convert ADA to BTC
+julia&gt; conv = conv_a_star(crypto, &quot;ADA&quot;, &quot;BTC&quot;);
+
+julia&gt; conv_value(conv)
+0.000009582698067
+
+julia&gt; conv_chain(conv)
+2-element Vector{CcyConv.AbstractPrice}:
+ MyPrice(&quot;Binance&quot;, &quot;ADA&quot;,  &quot;USDT&quot;, 0.4037234)
+ MyPrice(&quot;Huobi&quot;,   &quot;USDT&quot;, &quot;BTC&quot;,  0.0000237)</code></pre><h2 id="context_manual"><a class="docs-heading-anchor" href="#context_manual">Using context</a><a id="context_manual-1"></a><a class="docs-heading-anchor-permalink" href="#context_manual" title="Permalink"></a></h2><p>Finally, we can go further and implement a context into our workspace. This will allow us to request and cache data from different sources without crossing them with each other.</p><p>First, let&#39;s define a new context <code>MyCtx</code> that can store the previously requested data.</p><pre><code class="language-julia hljs">using CcyConv
+using CryptoExchangeAPIs.Binance
+
+struct MyCtx &lt;: CcyConv.AbstractCtx
+    prices::Dict{String,Float64}
+
+    MyCtx() = new(Dict{String,Float64}())
+end</code></pre><p>Also, now the currency pair <code>ExSymbol</code> will not store a specific price value, but instead will contain only the corresponding symbol required for the API request. This will be achieved by further overloading the <code>price</code> method.</p><pre><code class="language-julia hljs">struct ExSymbol &lt;: CcyConv.AbstractPrice
+    base_asset::String
+    quote_asset::String
+    symbol::String
+end</code></pre><p>As before, new getter methods must be defined to conform to the <a href="../api_reference/#CcyConv.AbstractPrice"><code>AbstractPrice</code></a> interface. Particular attention should be paid to the <code>price</code> method, which now first tries to find the desired price in the context cache <code>MyCtx</code> and only if this price has not been previously requested - makes a request to the exchange API.</p><pre><code class="language-julia hljs">function CcyConv.from_asset(x::ExSymbol)::String
+    return x.base_asset
+end
+
+function CcyConv.to_asset(x::ExSymbol)::String
+    return x.quote_asset
+end
+
+function CcyConv.price(ctx::MyCtx, x::ExSymbol)::Float64
+    return get!(ctx.prices, x.symbol) do
+        try
+            Binance.Spot.avg_price(; symbol = x.symbol).result.price
+        catch
+            NaN
+        end
+    end
+end</code></pre><p>Finally, you need to create a new graph, a custom context and add custom currency pairs to the graph:</p><pre><code class="language-julia hljs">my_graph = FXGraph()
+my_ctx = MyCtx()
+my_conv = (to, from) -&gt; conv_value(my_graph(my_ctx, CcyConv.a_star_alg, to, from))
+
+push!(my_graph, ExSymbol(&quot;ADA&quot;,  &quot;BTC&quot;,  &quot;ADABTC&quot;))
+push!(my_graph, ExSymbol(&quot;BTC&quot;,  &quot;USDT&quot;, &quot;BTCUSDT&quot;))
+push!(my_graph, ExSymbol(&quot;PEPE&quot;, &quot;USDT&quot;, &quot;PEPEUSDT&quot;))
+push!(my_graph, ExSymbol(&quot;EOS&quot;,  &quot;USDT&quot;, &quot;EOSUSDT&quot;))</code></pre><p>To set the context <code>my_ctx</code>, you must use a lower-level <a href="../api_reference/#CcyConv.FXGraph-Tuple{CcyConv.AbstractCtx, Function, String, String}"><code>method</code></a> with an explicit specification of the used context, as well as the path search algorithm.</p><pre><code class="language-julia-repl hljs"># &quot;long&quot; request for prices from the exchange
+julia&gt; @time my_conv(&quot;ADA&quot;, &quot;EOS&quot;)
+  4.740000 seconds (1.80 M allocations: 120.606 MiB, 0.52% gc time, 14.55% compilation time)
+0.6004274502578457
+
+# &quot;quick&quot; request for prices from cache
+julia&gt; @time my_conv(&quot;ADA&quot;, &quot;EOS&quot;)
+  0.000130 seconds (46 allocations: 2.312 KiB)
+0.6004274502578457</code></pre><p>With this approach, due to the context, only the first data request will take a long time. Subsequent requests will take much less time.</p><p>You can go further and add a refresh rate for updating the data in the cache.</p><h2 id="Pathfinding-algorithm"><a class="docs-heading-anchor" href="#Pathfinding-algorithm">Pathfinding algorithm</a><a id="Pathfinding-algorithm-1"></a><a class="docs-heading-anchor-permalink" href="#Pathfinding-algorithm" title="Permalink"></a></h2><p>If you are planning to implement your own graph pathfinding method, you should use the following function signature:</p><pre><code class="language-julia hljs">custom_alg(fx::FXGraph, from_id::UInt64, to_id::UInt64) -&gt; Vector{Pair{Integer, Integer}}</code></pre><p>Which returns a vector with pairs of indices corresponding to the <code>fx</code> graph currencies.</p><p>The vector of such pairs should form a chain of conversions of the following form:</p><pre><code class="language-julia hljs">2-element Vector{Pair{Int64, Int64}}:
+ 1 =&gt; 2
+ 2 =&gt; 3</code></pre><p>Then you can use a low-level <a href="../api_reference/#CcyConv.FXGraph-Tuple{CcyConv.AbstractCtx, Function, String, String}"><code>method</code></a> to apply your pathfinding algorithm.</p><p>See previous <a href="#context_manual"><code>section</code></a> to add your own context or just use a dummy one:</p><pre><code class="language-julia-repl hljs">julia&gt; my_graph = FXGraph();
+
+julia&gt; dummy_ctx = CcyConv.MyCtx();
+
+julia&gt; my_graph(dummy_ctx, custom_alg, &quot;ADA&quot;, &quot;USDT&quot;)
+[...]</code></pre><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+mermaid.initialize({
+    startOnLoad: true,
+    theme: "neutral"
+});
+</script></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../api_reference/">API Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Thursday 1 August 2024 19:09">Thursday 1 August 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
