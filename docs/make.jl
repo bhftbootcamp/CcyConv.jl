@@ -14,11 +14,7 @@ makedocs(;
         assets = String["assets/favicon.ico"],
         sidebar_sitename = true,
     ),
-    pages = [
-        "Home" => "index.md",
-        "pages/manual.md",
-        "pages/api_reference.md",
-    ],
+    pages = ["Home" => "index.md", "pages/manual.md", "pages/api_reference.md"],
     warnonly = [:doctest, :missing_docs],
 )
 
