@@ -62,74 +62,72 @@ append!(
     ],
 )
 
-conv = conv_a_star(crypto, "ADA", "BNB")
+result = conv(crypto, "ADA", "BNB")
 
-julia> conv_value(conv)
+julia> conv_value(result)
 0.0010534111319999999
 
-julia> conv_chain(conv)
+julia> conv_chain(result)
 3-element Vector{CcyConv.AbstractPrice}:
  Price("ADA",  "USDT", 0.5911)
  Price("USDT", "ETH",  0.0003)
  Price("ETH",  "BNB",  5.9404)
 ```
 
-The package lets you to set up a directed graph containing currencies as vertices and convert rates as edges. The graph can fill the missing data from anywhere and directly during the running conversion path calculation.
+The graph topology can be built upfront — without actual prices — and the rates resolved lazily at query time through a custom context. This lets you fetch and cache live data from any source on the fly.
 
 ```julia
 using CcyConv
-using CryptoExchangeAPIs.Binance
+using EasyCurl
+using Serde
 
-struct MyCtx <: CcyConv.AbstractCtx
+struct BinanceCtx <: CcyConv.AbstractCtx
     prices::Dict{String,Float64}
 
-    MyCtx() = new(Dict{String,Float64}())
+    BinanceCtx() = new(Dict{String,Float64}())
 end
 
-struct ExSymbol <: CcyConv.AbstractPrice
+struct BinancePair <: CcyConv.AbstractPrice
     base_asset::String
     quote_asset::String
     symbol::String
 end
 
-function CcyConv.from_asset(x::ExSymbol)::String
-    return x.base_asset
-end
+CcyConv.from_asset(x::BinancePair) = x.base_asset
+CcyConv.to_asset(x::BinancePair) = x.quote_asset
 
-function CcyConv.to_asset(x::ExSymbol)::String
-    return x.quote_asset
-end
-
-function CcyConv.price(ctx::MyCtx, x::ExSymbol)::Float64
+function CcyConv.price(ctx::BinanceCtx, x::BinancePair)::Float64
     return get!(ctx.prices, x.symbol) do
         try
-            Binance.Spot.avg_price(; symbol = x.symbol).result.price
+            resp = http_get("https://api.binance.com/api/v3/avgPrice?symbol=$(x.symbol)")
+            data = Serde.parse_json(http_body(resp))
+            parse(Float64, data["price"])
         catch
             NaN
         end
     end
 end
 
-my_graph = FXGraph()
-my_ctx = MyCtx()
+fx = FXGraph()
+ctx = BinanceCtx()
 
 append!(
-    my_graph,
+    fx,
     [
-        ExSymbol("ADA",  "BTC",  "ADABTC"),
-        ExSymbol("BTC",  "USDT", "BTCUSDT"),
-        ExSymbol("PEPE", "USDT", "PEPEUSDT"),
-        ExSymbol("EOS",  "USDT", "EOSUSDT"),
+        BinancePair("ADA",  "BTC",  "ADABTC"),
+        BinancePair("BTC",  "USDT", "BTCUSDT"),
+        BinancePair("PEPE", "USDT", "PEPEUSDT"),
+        BinancePair("EOS",  "USDT", "EOSUSDT"),
     ],
 )
 
-my_conv = (to, from) -> conv_value(my_graph(my_ctx, CcyConv.a_star_alg, to, from))
-
-julia> @time my_conv("ADA", "EOS")
-  4.740000 seconds (1.80 M allocations: 120.606 MiB, 0.52% gc time, 14.55% compilation time)
+# First call fetches prices from the exchange
+julia> @time conv(fx, "ADA", "EOS"; ctx = ctx) |> conv_value
+  0.350000 seconds (...)
 0.6004274502578457
 
-julia> @time my_conv("ADA", "EOS")
+# Subsequent calls use cached prices
+julia> @time conv(fx, "ADA", "EOS"; ctx = ctx) |> conv_value
   0.000130 seconds (46 allocations: 2.312 KiB)
 0.6004274502578457
 ```

@@ -38,12 +38,12 @@ Finally, you can use one of the [`algorithms`](@ref algorithms) to find a path b
 
 ```julia-repl
 # Convert ADA to BTC
-julia> conv = conv_a_star(crypto, "ADA", "BTC");
+julia> result = conv(crypto, "ADA", "BTC");
 
-julia> conv_value(conv)
+julia> conv_value(result)
 0.000009582698067
 
-julia> conv_chain(conv)
+julia> conv_chain(result)
 2-element Vector{CcyConv.AbstractPrice}:
  Price("ADA",  "USDT", 0.4037234)
  Price("USDT", "BTC",  0.0000237)
@@ -89,12 +89,12 @@ push!(crypto, MyPrice("Gateio",  "ETH",  "ALGO", 14735.460))
 
 ```julia-repl
 # Convert ADA to BTC
-julia> conv = conv_a_star(crypto, "ADA", "BTC");
+julia> result = conv(crypto, "ADA", "BTC");
 
-julia> conv_value(conv)
+julia> conv_value(result)
 0.000009582698067
 
-julia> conv_chain(conv)
+julia> conv_chain(result)
 2-element Vector{CcyConv.AbstractPrice}:
  MyPrice("Binance", "ADA",  "USDT", 0.4037234)
  MyPrice("Huobi",   "USDT", "BTC",  0.0000237)
@@ -102,49 +102,42 @@ julia> conv_chain(conv)
 
 ## [Using context](@id context_manual)
 
-Finally, we can go further and implement a context into our workspace.
-This will allow us to request and cache data from different sources without crossing them with each other.
+The graph topology can be built upfront — without actual prices — and the rates resolved lazily at query time through a custom context.
+This lets you fetch and cache live data from any source on the fly.
 
-First, let's define a new context `MyCtx` that can store the previously requested data.
+First, let's define a new context `BinanceCtx` that can store the previously requested data, and a custom price type `BinancePair` that holds only the symbol name (no price value).
 
 ```julia
 using CcyConv
-using CryptoExchangeAPIs.Binance
+using EasyCurl
+using Serde
 
-struct MyCtx <: CcyConv.AbstractCtx
+struct BinanceCtx <: CcyConv.AbstractCtx
     prices::Dict{String,Float64}
 
-    MyCtx() = new(Dict{String,Float64}())
+    BinanceCtx() = new(Dict{String,Float64}())
 end
-```
 
-Also, now the currency pair `ExSymbol` will not store a specific price value, but instead will contain only the corresponding symbol required for the API request.
-This will be achieved by further overloading the `price` method.
-
-```julia
-struct ExSymbol <: CcyConv.AbstractPrice
+struct BinancePair <: CcyConv.AbstractPrice
     base_asset::String
     quote_asset::String
     symbol::String
 end
 ```
 
-As before, new getter methods must be defined to conform to the [`AbstractPrice`](@ref CcyConv.AbstractPrice) interface.
-Particular attention should be paid to the `price` method, which now first tries to find the desired price in the context cache `MyCtx` and only if this price has not been previously requested - makes a request to the exchange API.
+New getter methods must be defined to conform to the [`AbstractPrice`](@ref CcyConv.AbstractPrice) interface.
+The `price` method first checks the context cache and only fetches from the exchange API on a cache miss.
 
 ```julia
-function CcyConv.from_asset(x::ExSymbol)::String
-    return x.base_asset
-end
+CcyConv.from_asset(x::BinancePair) = x.base_asset
+CcyConv.to_asset(x::BinancePair) = x.quote_asset
 
-function CcyConv.to_asset(x::ExSymbol)::String
-    return x.quote_asset
-end
-
-function CcyConv.price(ctx::MyCtx, x::ExSymbol)::Float64
+function CcyConv.price(ctx::BinanceCtx, x::BinancePair)::Float64
     return get!(ctx.prices, x.symbol) do
         try
-            Binance.Spot.avg_price(; symbol = x.symbol).result.price
+            resp = http_get("https://api.binance.com/api/v3/avgPrice?symbol=$(x.symbol)")
+            data = Serde.parse_json(http_body(resp))
+            parse(Float64, data["price"])
         catch
             NaN
         end
@@ -152,63 +145,80 @@ function CcyConv.price(ctx::MyCtx, x::ExSymbol)::Float64
 end
 ```
 
-Finally, you need to create a new graph, a custom context and add custom currency pairs to the graph:
+Create a graph, a context, and add custom currency pairs:
 
 ```julia
-my_graph = FXGraph()
-my_ctx = MyCtx()
-my_conv = (to, from) -> conv_value(my_graph(my_ctx, CcyConv.a_star_alg, to, from))
+fx = FXGraph()
+ctx = BinanceCtx()
 
-push!(my_graph, ExSymbol("ADA",  "BTC",  "ADABTC"))
-push!(my_graph, ExSymbol("BTC",  "USDT", "BTCUSDT"))
-push!(my_graph, ExSymbol("PEPE", "USDT", "PEPEUSDT"))
-push!(my_graph, ExSymbol("EOS",  "USDT", "EOSUSDT"))
+push!(fx, BinancePair("ADA",  "BTC",  "ADABTC"))
+push!(fx, BinancePair("BTC",  "USDT", "BTCUSDT"))
+push!(fx, BinancePair("PEPE", "USDT", "PEPEUSDT"))
+push!(fx, BinancePair("EOS",  "USDT", "EOSUSDT"))
 ```
 
-To set the context `my_ctx`, you must use a lower-level [`method`](@ref CcyConv.FXGraph(::CcyConv.AbstractCtx, ::Function, ::String, ::String)) with an explicit specification of the used context, as well as the path search algorithm.
+Pass the context as a keyword argument to `conv`:
 
 ```julia-repl
-# "long" request for prices from the exchange
-julia> @time my_conv("ADA", "EOS")
-  4.740000 seconds (1.80 M allocations: 120.606 MiB, 0.52% gc time, 14.55% compilation time)
+# First call fetches prices from the exchange
+julia> @time conv(fx, "ADA", "EOS"; ctx = ctx) |> conv_value
+  0.350000 seconds (...)
 0.6004274502578457
 
-# "quick" request for prices from cache
-julia> @time my_conv("ADA", "EOS")
+# Subsequent calls use cached prices
+julia> @time conv(fx, "ADA", "EOS"; ctx = ctx) |> conv_value
   0.000130 seconds (46 allocations: 2.312 KiB)
 0.6004274502578457
 ```
 
-With this approach, due to the context, only the first data request will take a long time.
-Subsequent requests will take much less time.
+Only the first request is slow (fetches from the exchange). Subsequent calls hit the cache.
 
-You can go further and add a refresh rate for updating the data in the cache.
+## Min rate pathfinding
 
-## Pathfinding algorithm
+By default, [`conv`](@ref) uses state-space A* ([`AStar`](@ref)) to find the path whose **product of exchange rates** is minimum, running over edges weighted with `log(rate)`. Negative log-weights — produced whenever a rate is below 1 — would normally break a Dijkstra-style search, so the algorithm lifts the search onto a graph whose vertices are `(currency, visited_set)` pairs. Every walk in the lifted graph is a simple path in the original by construction, which means the algorithm returns the same minimum-rate answer as [`DFS`](@ref) on every graph (including those with arbitrage cycles). A min-edge-weight admissible heuristic prunes branches that cannot improve the best path found so far. For graphs with more than 64 currencies the implementation falls back to an exhaustive DFS.
 
-If you are planning to implement your own graph pathfinding method, you should use the following function signature:
+[`DFS`](@ref) finds the path whose **product of exchange rates** is minimum, using an exhaustive DFS that enumerates all simple paths between the source and target currencies. This guarantees the optimal result but has exponential worst-case complexity, so prefer these functions for small and medium-sized graphs.
+
 ```julia
-custom_alg(fx::FXGraph, from_id::UInt64, to_id::UInt64) -> Vector{Pair{Integer, Integer}}
+using CcyConv
+
+fx = FXGraph()
+
+append!(
+    fx,
+    [
+        Price("A", "B", 2.0),
+        Price("B", "D", 3.0),
+        Price("D", "F", 0.5),
+        Price("A", "C", 1.5),
+        Price("C", "E", 2.0),
+        Price("E", "F", 3.0),
+    ],
+)
 ```
-
-Which returns a vector with pairs of indices corresponding to the `fx` graph currencies.
-
-The vector of such pairs should form a chain of conversions of the following form:
-```julia
-2-element Vector{Pair{Int64, Int64}}:
- 1 => 2
- 2 => 3
-```
-
-Then you can use a low-level [`method`](@ref CcyConv.FXGraph(::CcyConv.AbstractCtx, ::Function, ::String, ::String)) to apply your pathfinding algorithm.
-
-See previous [`section`](@ref context_manual) to add your own context or just use a dummy one:
 
 ```julia-repl
-julia> my_graph = FXGraph();
+julia> conv(fx, "A", "F", DFS()) |> conv_value
+3.0
+```
 
-julia> dummy_ctx = CcyConv.MyCtx();
+## Custom pathfinding algorithm
 
-julia> my_graph(dummy_ctx, custom_alg, "ADA", "USDT")
+You can define a custom algorithm type and extend [`conv`](@ref):
+
+```julia
+struct MyAlg end
+
+function CcyConv.conv(fx::FXGraph, from::String, to::String, ::MyAlg; ctx::CcyConv.AbstractCtx = CcyConv.MyCtx())
+    # custom pathfinding logic
+end
+```
+
+Then use it like any built-in algorithm:
+
+```julia-repl
+julia> fx = FXGraph();
+
+julia> conv(fx, "ADA", "USDT", MyAlg())
 [...]
 ```

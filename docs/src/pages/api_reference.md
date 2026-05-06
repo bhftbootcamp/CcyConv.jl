@@ -34,11 +34,10 @@ CcyConv.conv_chain
 
 ## [Pathfinding](@id algorithms)
 
-Available pathfinding algorithms:
-- `a_star_alg`: The most basic algorithm for finding the shortest path between two currencies.
-
 ```@docs
-CcyConv.conv_a_star
+CcyConv.AStar
+CcyConv.DFS
+CcyConv.conv
 ```
 
 ```@docs

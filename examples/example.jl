@@ -12,13 +12,13 @@ push!(crypto, Price("BTC", "ETH", 18.80891065680265))
 push!(crypto, Price("ETH", "ALGO", 14735.46052631579))
 
 # Convert ADA to USDT
-conv_a_star(crypto, "ADA", "USDT") |> conv_safe_value
+conv(crypto, "ADA", "USDT") |> conv_safe_value
 
 # Convert ADA to BTC
-conv_a_star(crypto, "ADA", "BTC") |> conv_value
+conv(crypto, "ADA", "BTC") |> conv_value
 
 # Convert ADA to ETH through BTC
-conv_a_star(crypto, "ADA", "ETH") |> conv_value
+conv(crypto, "ADA", "ETH") |> conv_value
 
 #__
 
@@ -46,55 +46,53 @@ push!(crypto, MyPrice("Okex", "BTC", "ETH", 18.80891065680265))
 push!(crypto, MyPrice("Gateio", "ETH", "ALGO", 14735.46052631579))
 
 # Convert ADA to USDT
-conv_a_star(crypto, "ADA", "USDT")
+conv(crypto, "ADA", "USDT")
 
 # Convert ADA to BTC
-conv_a_star(crypto, "ADA", "BTC")
+conv(crypto, "ADA", "BTC")
 
 # Convert ADA to ETH through BTC
-conv_a_star(crypto, "ADA", "ETH")
+conv(crypto, "ADA", "ETH")
 
 #__
 
 using CcyConv
-using CryptoExchangeAPIs.Binance
+using EasyCurl
+using Serde
 
-struct MyCtx <: CcyConv.AbstractCtx
+struct BinanceCtx <: CcyConv.AbstractCtx
     prices::Dict{String,Float64}
 
-    MyCtx() = new(Dict{String,Float64}())
+    BinanceCtx() = new(Dict{String,Float64}())
 end
 
-struct ExSymbol <: CcyConv.AbstractPrice
+struct BinancePair <: CcyConv.AbstractPrice
     base_asset::String
     quote_asset::String
     symbol::String
 end
 
-function CcyConv.from_asset(x::ExSymbol)::String
-    return x.base_asset
-end
+CcyConv.from_asset(x::BinancePair) = x.base_asset
+CcyConv.to_asset(x::BinancePair) = x.quote_asset
 
-function CcyConv.to_asset(x::ExSymbol)::String
-    return x.quote_asset
-end
-
-function CcyConv.price(ctx::MyCtx, x::ExSymbol)::Float64
+function CcyConv.price(ctx::BinanceCtx, x::BinancePair)::Float64
     return get!(ctx.prices, x.symbol) do
-        return try
-            Binance.Spot.avg_price(; symbol = x.symbol).result.price
+        try
+            resp = http_get("https://api.binance.com/api/v3/avgPrice?symbol=$(x.symbol)")
+            data = Serde.parse_json(http_body(resp))
+            parse(Float64, data["price"])
         catch
             NaN
         end
     end
 end
 
-my_graph = FXGraph()
-my_ctx = MyCtx()
+fx = FXGraph()
+ctx = BinanceCtx()
 
-push!(my_graph, ExSymbol("ADA", "BTC", "ADABTC"))
-push!(my_graph, ExSymbol("BTC", "USDT", "BTCUSDT"))
-push!(my_graph, ExSymbol("PEPE", "USDT", "PEPEUSDT"))
-push!(my_graph, ExSymbol("EOS", "USDT", "EOSUSDT"))
+push!(fx, BinancePair("ADA", "BTC", "ADABTC"))
+push!(fx, BinancePair("BTC", "USDT", "BTCUSDT"))
+push!(fx, BinancePair("PEPE", "USDT", "PEPEUSDT"))
+push!(fx, BinancePair("EOS", "USDT", "EOSUSDT"))
 
-@time my_graph(my_ctx, CcyConv.a_star_alg, "ADA", "EOS")
+@time conv(fx, "ADA", "EOS"; ctx = ctx)
