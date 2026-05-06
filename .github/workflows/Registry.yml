@@ -21,7 +21,7 @@ jobs:
           registry: bhftbootcamp/Green
       - uses: julia-actions/setup-julia@v2
         with:
-          version: '1.10'
+          version: 1.9
       - uses: julia-actions/cache@v2
       - name: Configure Git
         run: |
