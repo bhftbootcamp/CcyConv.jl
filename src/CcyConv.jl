@@ -2,9 +2,10 @@ module CcyConv
 
 export ConvRate,
     FXGraph,
-    Price
-
-export conv_a_star,
+    Price,
+    AStar,
+    DFS,
+    conv,
     conv_ccys,
     conv_chain,
     conv_safe_value,
@@ -31,9 +32,7 @@ An abstract type representing workspace context.
 """
 abstract type AbstractCtx end
 
-struct MyCtx <: AbstractCtx
-    #__ empty
-end
+struct MyCtx <: AbstractCtx end
 
 """
     from_asset(x::AbstractPrice) -> String
@@ -41,7 +40,7 @@ end
 Returns the name of the base currency of `x`.
 """
 function from_asset(x::AbstractPrice)::String
-    return throw("not implemented for $(typeof(x))")
+    error("not implemented for $(typeof(x))")
 end
 
 """
@@ -50,7 +49,7 @@ end
 Returns the name of the quote currency of `x`.
 """
 function to_asset(x::AbstractPrice)::String
-    return throw("not implemented for $(typeof(x))")
+    error("not implemented for $(typeof(x))")
 end
 
 """
@@ -59,7 +58,7 @@ end
 Returns price of the currency pair `x`.
 """
 function price(x::AbstractPrice)::Float64
-    return throw("not implemented for $(typeof(x))")
+    error("not implemented for $(typeof(x))")
 end
 
 """
@@ -104,6 +103,9 @@ function price(x::Price)::Float64
     return x.price
 end
 
+Base.:(==)(a::Price, b::Price) = a.from_asset == b.from_asset && a.to_asset == b.to_asset && a.price == b.price
+Base.hash(x::Price, h::UInt) = hash((x.from_asset, x.to_asset, x.price), h)
+
 """
     FXGraph
 
@@ -114,22 +116,28 @@ This type describes a weighted directed graph in which:
 - The weight of the edge is determined by the conversion price of the currency pair.
 
 ## Fields
-- `edge_nodes::Dict{NTuple{2,UInt64},Vector{AbstractPrice}}`: Dictionary containing information about conversion prices between nodes.
-- `edge_encode::Dict{String,UInt64}`: A dictionary containing the names of currencies as keys and their identification numbers as values.
+- `edge_prices::Dict{NTuple{2,Int64},Vector{AbstractPrice}}`: Dictionary containing information about conversion prices between nodes.
+- `node_ids::Dict{String,Int64}`: A dictionary containing the names of currencies as keys and their identification numbers as values.
 - `graph::Graphs.SimpleGraph{Int64}`: A graph containing basic information about vertices and edges.
 """
 struct FXGraph
-    edge_nodes::Dict{NTuple{2,UInt64},Vector{AbstractPrice}}
-    edge_encode::Dict{String,UInt64}
+    edge_prices::Dict{NTuple{2,Int64},Vector{AbstractPrice}}
+    node_ids::Dict{String,Int64}
     graph::SimpleGraph{Int64}
 
     function FXGraph()
         return new(
-            Dict{NTuple{2,UInt64},Vector{AbstractPrice}}(),
-            Dict{String,UInt64}(),
+            Dict{NTuple{2,Int64},Vector{AbstractPrice}}(),
+            Dict{String,Int64}(),
             SimpleGraph{Int64}(),
         )
     end
+end
+
+function FXGraph(nodes::Vector{P})::FXGraph where {P<:AbstractPrice}
+    fx = FXGraph()
+    append!(fx, nodes)
+    return fx
 end
 
 """
@@ -138,7 +146,7 @@ end
 Returns the names of all currencies stored in the graph `fx`.
 """
 function conv_ccys(fx::FXGraph)::Vector{String}
-    return collect(keys(fx.edge_encode))
+    return collect(keys(fx.node_ids))
 end
 
 """
@@ -147,20 +155,20 @@ end
 Adds a new edge to the graph `fx` corresponding to the currency pair `node`.
 """
 function Base.push!(fx::FXGraph, node::P)::FXGraph where {P<:AbstractPrice}
-    from_id = get!(fx.edge_encode, from_asset(node)) do
+    from_id = get!(fx.node_ids, from_asset(node)) do
         add_vertex!(fx.graph)
-        length(fx.edge_encode) + 1
+        length(fx.node_ids) + 1
     end
 
-    to_id = get!(fx.edge_encode, to_asset(node)) do
+    to_id = get!(fx.node_ids, to_asset(node)) do
         add_vertex!(fx.graph)
-        length(fx.edge_encode) + 1
+        length(fx.node_ids) + 1
     end
 
-    if !haskey(fx.edge_nodes, (from_id, to_id))
-        fx.edge_nodes[(from_id, to_id)] = P[node]
+    if !haskey(fx.edge_prices, (from_id, to_id))
+        fx.edge_prices[(from_id, to_id)] = P[node]
     else
-        push!(fx.edge_nodes[(from_id, to_id)], node)
+        push!(fx.edge_prices[(from_id, to_id)], node)
     end
 
     add_edge!(fx.graph, from_id, to_id)
@@ -180,32 +188,6 @@ function Base.append!(fx::FXGraph, nodes::Vector{P})::FXGraph where {P<:Abstract
     return fx
 end
 
-function rm_edge!(fx::FXGraph, from_id::UInt64, to_id::UInt64)::Bool
-    return if haskey(fx.edge_nodes, (from_id, to_id))
-        isempty(fx.edge_nodes[(from_id, to_id)]) || deleteat!(fx.edge_nodes[(from_id, to_id)], 1)
-        isempty(fx.edge_nodes[(from_id, to_id)]) && rem_edge!(fx.graph, from_id, to_id)
-    elseif haskey(fx.edge_nodes, (to_id, from_id))
-        isempty(fx.edge_nodes[(to_id, from_id)]) || deleteat!(fx.edge_nodes[(to_id, from_id)], 1)
-        isempty(fx.edge_nodes[(to_id, from_id)]) && rem_edge!(fx.graph, to_id, from_id)
-    end
-end
-
-#__ alg
-
-function graph_path(path_alg::Function, fx::FXGraph, from_asset::String, to_asset::String)
-    from_id = get(fx.edge_encode, from_asset, nothing)
-    to_id   = get(fx.edge_encode, to_asset, nothing)
-
-    return if isnothing(from_id) || isnothing(to_id)
-        Vector{Pair{Int64,Int64}}()
-    else
-        path_alg(fx, from_id, to_id)
-    end
-end
-
-function a_star_alg(fx::FXGraph, from_id::UInt64, to_id::UInt64)
-    return map(x -> x.src => x.dst, a_star(fx.graph, from_id, to_id))
-end
 
 """
     ConvRate
@@ -213,7 +195,7 @@ end
 An object describing the price and conversion path between two currencies.
 
 ## Fields
-- `from_asset::String`: The name of an initial curreny.
+- `from_asset::String`: The name of an initial currency.
 - `to_asset::String`: The name of a target currency.
 - `conv::Float64`: Total currency conversion price.
 - `chain::Vector{AbstractPrice}`: Chain of currency pairs involved in conversion.
@@ -258,13 +240,7 @@ function conv_chain(x::ConvRate)::Vector{AbstractPrice}
     return x.chain
 end
 
-function price_first_non_nan(ctx::AbstractCtx, items::Vector{P}) where {P<:AbstractPrice}
-    for item in items
-        value = price(ctx, item)
-        isnan(value) || return (item, value)
-    end
-    return (nothing, NaN)
-end
+include("algorithms.jl")
 
 """
     (fx::FXGraph)(ctx::AbstractCtx, path_alg::Function, from_asset::String, to_asset::String) -> ConvRate
@@ -272,43 +248,49 @@ end
 Applies algorithm `path_alg` to find a path on graph `fx` between base currency `from_asset` and target currency `to_asset` using context `ctx`.
 
 !!! note
-    This method is low-level and is required when using a custom context.
+    This method is low-level. Prefer using [`conv`](@ref) with the `ctx` keyword argument.
 
 """
 function FXGraph(::AbstractCtx, ::Function, ::String, ::String) end
 
 function (fx::FXGraph)(ctx::AbstractCtx, path_alg::Function, from_asset::String, to_asset::String)::ConvRate
     from_asset == to_asset && return ConvRate(from_asset, to_asset, 1.0)
-    g_path = graph_path(path_alg, fx, from_asset, to_asset)
+    g_path = _graph_path(path_alg, ctx, fx, from_asset, to_asset)
     isempty(g_path) && return ConvRate(from_asset, to_asset, NaN)
     chain = Vector{AbstractPrice}()
-    conv::Float64 = 1.0
-    for (from_id::UInt64, to_id::UInt64) in g_path
-        val::Float64 = if has_edge(fx.graph, from_id, to_id) && haskey(fx.edge_nodes, (from_id, to_id))
-            item, value = price_first_non_nan(ctx, fx.edge_nodes[(from_id, to_id)])
-            item !== nothing && push!(chain, item)
-            value
-        elseif has_edge(fx.graph, to_id, from_id) && haskey(fx.edge_nodes, (to_id, from_id))
-            item, value = price_first_non_nan(ctx, fx.edge_nodes[(to_id, from_id)])
-            item !== nothing && push!(chain, item)
-            inv(value)
-        else
-            NaN
-        end
-        (isnan(val) || isinf(val)) && rm_edge!(fx, from_id, to_id)
-        conv *= val
+    rate = 1.0
+    for (u, v) in g_path
+        x, w = _w(ctx, fx, u, v)
+        x !== nothing && push!(chain, x)
+        rate *= w
     end
-    return if isnan(conv)
-        fx(ctx, path_alg, from_asset, to_asset)
-    else
-        ConvRate(from_asset, to_asset, conv, chain)
-    end
+    isnan(rate) && return ConvRate(from_asset, to_asset, NaN)
+    return ConvRate(from_asset, to_asset, rate, chain)
 end
 
 """
-    conv_a_star(fx::FXGraph, from_asset::String, to_asset::String) -> ConvRate
+    AStar
 
-Uses an [`A*`](https://en.wikipedia.org/wiki/A*_search_algorithm) search algorithm to find the shortest path between `from_asset` and `to_asset` currencies in graph `fx`.
+Algorithm type for state-space A* pathfinding.
+Default algorithm for [`conv`](@ref).
+"""
+struct AStar end
+
+"""
+    DFS
+
+Algorithm type for exhaustive depth-first search pathfinding.
+"""
+struct DFS end
+
+"""
+    conv(fx::FXGraph, from_asset::String, to_asset::String, [::AStar]; ctx::AbstractCtx = MyCtx()) -> ConvRate
+
+Finds the conversion path with the **minimum** product rate between `from_asset` and `to_asset` in graph `fx`.
+
+Uses **state-space [`A*`](https://en.wikipedia.org/wiki/A*_search_algorithm)** over `log(rate)`-weighted edges: the search runs on a lifted graph whose vertices are `(currency, visited_set)` pairs, so every walk is a simple path in the original graph by construction. This means the algorithm returns the same answer as the exhaustive [`DFS`](@ref) on every graph, including those with arbitrage cycles. A min-edge-weight admissible heuristic prunes branches that cannot improve the best path found so far.
+
+The minimum-product simple path is NP-hard in general, so the worst-case state count is `O(V * 2^V)`; in practice the priority-queue ordering and admissible heuristic let it beat the exhaustive DFS on most inputs. For graphs with more than 64 currencies the implementation falls back to DFS (the bitmask representation no longer fits).
 
 ## Examples
 ```julia-repl
@@ -324,19 +306,29 @@ julia> append!(
            ],
        );
 
-julia> conv = conv_a_star(crypto, "ADA", "BTC");
+julia> result = conv(crypto, "ADA", "BTC");
 
-julia> conv_value(conv)
+julia> conv_value(result)
 0.000009582698067
 
-julia> conv_chain(conv)
+julia> conv_chain(result)
 2-element Vector{CcyConv.AbstractPrice}:
  Price("ADA",  "USDT", 0.4037234)
  Price("USDT", "BTC",  0.0000237)
 ```
 """
-function conv_a_star(fx::FXGraph, x...; kw...)::ConvRate
-    return fx(MyCtx(), a_star_alg, x...; kw...)
+function conv(fx::FXGraph, from_asset::String, to_asset::String, ::AStar = AStar(); ctx::AbstractCtx = MyCtx())::ConvRate
+    return fx(ctx, _min_path, from_asset, to_asset)
+end
+
+"""
+    conv(fx::FXGraph, from_asset::String, to_asset::String, ::DFS; ctx::AbstractCtx = MyCtx()) -> ConvRate
+
+Finds the conversion path with the **minimum** product rate between `from_asset` and `to_asset`.
+Uses exhaustive DFS over all simple paths in graph `fx`.
+"""
+function conv(fx::FXGraph, from_asset::String, to_asset::String, ::DFS; ctx::AbstractCtx = MyCtx())::ConvRate
+    return _optimal_rate(ctx, fx, from_asset, to_asset, Inf, <)
 end
 
 end
